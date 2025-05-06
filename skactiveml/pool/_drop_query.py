@@ -31,23 +31,23 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
     dropout_rate : float, default=0.75
         Dropout rate used to generate samples.
     n_dropout_samples : int, default=3
-        Number of dropout samples
+        Number of dropout samples.
     cluster_algo : ClusterMixin.__class__, default=KMeans
         The cluster algorithm to be used. It must implement a `fit_transform`
         method, which takes samples `X` as inputs, e.g.,
-        sklearn.clustering.KMeans and sklearn.clustering.MiniBatchKMeans.
+        `sklearn.clustering.KMeans` and `sklearn.clustering.MiniBatchKMeans`.
     cluster_algo_dict : dict, default=None
         The parameters passed to the clustering algorithm `cluster_algo`,
         excluding the parameter for the number of clusters.
     n_cluster_param_name : string, default="n_clusters"
         The name of the parameter for the number of clusters.
     clf_embedding_flag_name : str or None, default=None
-        Name of the flag, which is passed to the `predict_proba` method for
+        Name of the flag, which is passed to the `predict` method for
         getting the (learned) sample representations.
 
-        - If `clf_embedding_flag_name=None` and `predict_proba` returns
+        - If `clf_embedding_flag_name=None` and `predict` returns
           only one output, the input samples `X` are used.
-        - If `predict_proba` returns two outputs or `clf_embedding_name` is
+        - If `predict` returns two outputs or `clf_embedding_name` is
           not `None`, `(proba, embeddings)` are expected as outputs.
     missing_label : scalar or string or np.nan or None, default=np.nan
         Value to represent a missing label.
@@ -102,13 +102,13 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
             Labels of the training data set (possibly including unlabeled ones
             indicated by `self.missing_label`.)
         clf : skactiveml.base.SkactivemlClassifier
-            Classifier implementing the methods `fit` and `predict_proba`.
+            Classifier implementing the methods `fit` and `predict`.
         fit_clf : bool, default=True
             Defines whether the classifier `clf` should be fitted on `X`, `y`,
             and `sample_weight`.
         sample_weight : array-like of shape (n_samples,), default=None
             Weights of training samples in `X`.
-        candidates : None or array-like of shape (n_candidates, ) of type \
+        candidates : None or array-like of shape (n_candidates,) of type \
                 int, default=None
             - If `candidates` is `None`, the unlabeled samples from
               `(X,y)` are considered as `candidates`.
@@ -122,7 +122,7 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
 
         Returns
         -------
-        query_indices : numpy.ndarray of shape (batch_size)
+        query_indices : numpy.ndarray of shape (batch_size,)
             The query indices indicate for which candidate sample a label is
             to be queried, e.g., `query_indices[0]` indicates the first
             selected sample. The indexing refers to the samples in `X`.
@@ -181,35 +181,40 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
 
         # Compute predictions and optionally embeddings for original samples.
         if self.clf_embedding_flag_name is not None:
-            probas, X_cand = clf.predict_proba(
+            y_pred, X_cand = clf.predict(
                 X_cand, **{self.clf_embedding_flag_name: True}
             )
         else:
-            probas = clf.predict_proba(X_cand)
-            if isinstance(probas, tuple):
-                probas, X_cand = probas
+            y_pred = clf.predict(X_cand)
+            if isinstance(y_pred, tuple):
+                y_pred, X_cand = y_pred
 
-        y_pred = rand_argmax(probas, axis=-1, random_state=self.random_state_)
+        # Number of candidate samples.
+        n_candidates = len(X_cand)
 
-        # Compute dropout features.
-        X_dropout = np.repeat(X_cand, self.n_dropout_samples, axis=0)
-        dropout_mask = self.random_state_.choice(
-            [True, False],
-            size=X_dropout.size,
-            p=[self.dropout_rate, 1 - self.dropout_rate],
+        # Prepare an array to hold the dropout predictions.
+        y_pred_dropout = np.empty(
+            (n_candidates, self.n_dropout_samples), dtype=object
         )
-        dropout_mask = dropout_mask.reshape(X_dropout.shape)
-        X_dropout[dropout_mask] = 0.0
 
-        # Compute class predictions for dropout samples.
-        probas_dropout = clf.predict_proba(X_dropout)
-        if isinstance(probas_dropout, tuple):
-            probas_dropout, _ = probas_dropout
-        y_pred_dropout = rand_argmax(
-            probas_dropout, axis=-1, random_state=self.random_state_
-        )
-        new_shape = (len(X_cand), self.n_dropout_samples)
-        y_pred_dropout = y_pred_dropout.reshape(new_shape)
+        # Loop over the number of dropout inferences.
+        for i in range(self.n_dropout_samples):
+            # Copy the candidates so as not to modify the original data.
+            X_dropout = X_cand.copy()
+
+            # Generate and apply the dropout mask.
+            dropout_mask = self.random_state_.choice(
+                [True, False],
+                size=X_dropout.shape,
+                p=[self.dropout_rate, 1 - self.dropout_rate],
+            )
+            X_dropout[dropout_mask] = 0.0
+
+            # Compute class predictions for this dropout sample.
+            y_pred_dropout_current = clf.predict(X_dropout)
+            if isinstance(y_pred_dropout_current, tuple):
+                y_pred_dropout_current, _ = y_pred_dropout_current
+            y_pred_dropout[:, i] = y_pred_dropout_current
 
         # Filter candidates for clustering based on disagreement.
         n_disagrees = (y_pred[:, None] != y_pred_dropout).sum(axis=-1)

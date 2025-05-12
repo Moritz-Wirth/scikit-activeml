@@ -161,7 +161,7 @@ class ExpectedModelVarianceReduction(SingleAnnotatorPoolQueryStrategy):
             new_model_variance,
             reg,
             random_state=self.random_state_,
-            **self.integration_dict
+            **self.integration_dict,
         )
 
         utilities_cand = old_model_variance - ex_model_variance

@@ -50,8 +50,9 @@ max = { file = ["requirements_max.txt"] }
 [tool.setuptools.packages.find]
 include = ["skactiveml", "skactiveml.*"]
 exclude = [
-  "*.tests",
-  "*.tests.*",
+  "skactiveml.tests",
+  "skactiveml.*.tests",
+  "skactiveml.*.tests.*",
 ]
 
 

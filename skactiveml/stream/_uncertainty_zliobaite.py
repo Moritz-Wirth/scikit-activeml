@@ -202,7 +202,7 @@ class UncertaintyZliobaite(SingleAnnotatorStreamQueryStrategy):
             self.budget_manager_.update,
             candidates=candidates,
             queried_indices=queried_indices,
-            **budget_manager_param_dict
+            **budget_manager_param_dict,
         )
         return self
 
@@ -216,7 +216,7 @@ class UncertaintyZliobaite(SingleAnnotatorStreamQueryStrategy):
         fit_clf,
         return_utilities,
         reset=True,
-        **check_candidates_params
+        **check_candidates_params,
     ):
         """Validate input data and set or check the `n_features_in_` attribute.
 
@@ -268,7 +268,7 @@ class UncertaintyZliobaite(SingleAnnotatorStreamQueryStrategy):
             candidates,
             return_utilities,
             reset=reset,
-            **check_candidates_params
+            **check_candidates_params,
         )
         self._validate_random_state()
         X, y, sample_weight = self._validate_X_y_sample_weight(

@@ -138,7 +138,7 @@ class StreamRandomSampling(SingleAnnotatorStreamQueryStrategy):
         candidates,
         return_utilities,
         reset=True,
-        **check_candidates_params
+        **check_candidates_params,
     ):
         """Validate input data and set or check the `n_features_in_` attribute.
 
@@ -178,7 +178,7 @@ class StreamRandomSampling(SingleAnnotatorStreamQueryStrategy):
             candidates,
             return_utilities,
             reset=reset,
-            **check_candidates_params
+            **check_candidates_params,
         )
 
         self._validate_random_state()
@@ -300,7 +300,7 @@ class PeriodicSampling(SingleAnnotatorStreamQueryStrategy):
         candidates,
         return_utilities,
         reset=True,
-        **check_candidates_params
+        **check_candidates_params,
     ):
         """Validate input data and set or check the `n_features_in_` attribute.
 
@@ -330,7 +330,7 @@ class PeriodicSampling(SingleAnnotatorStreamQueryStrategy):
             candidates,
             return_utilities,
             reset=reset,
-            **check_candidates_params
+            **check_candidates_params,
         )
 
         self._validate_random_state()

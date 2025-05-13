@@ -246,7 +246,7 @@ class KLDivergenceMaximization(SingleAnnotatorPoolQueryStrategy):
             new_kl_divergence,
             reg,
             random_state=self.random_state_,
-            **self.integration_dict_target_val
+            **self.integration_dict_target_val,
         )
 
         return kl_div

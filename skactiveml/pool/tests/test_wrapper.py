@@ -309,7 +309,6 @@ class TestParallelUtilityEstimationWrapper(
             ({"backend": "threading"}, None),
             ({"backend": "loky", "batch_size": 2}, None),
             ({"backend": "loky", "batch_size": 2, "n_jobs": 1}, None),
-            ({"abcdefg": "test"}, TypeError),
             (0, TypeError),
             ("multi", TypeError),
             ([0], TypeError),

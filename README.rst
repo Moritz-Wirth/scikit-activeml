@@ -62,7 +62,7 @@ which have been tested for the current package release:
 
 ::
 
-    pip install -r requirements_max.txt
+    pip install -U scikit-activeml[max]
 
 .. user_installation_end
 

@@ -96,8 +96,7 @@ Now, install the required project dependencies, which are defined in the
 
    # Make sure your scikit-activeml Python environment is active!
    cd <project-root>
-   pip install -r requirements.txt
-   pip install -r requirements_extra.txt
+   pip install -e .[dev]
 
 After the pip installation is successful, you must install ``pandoc`` and
 ``ghostscript`` if they are not already installed.
@@ -121,12 +120,11 @@ and should conform to the `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`__
 Style Guide for Python code. For linting, the use of
 `flake8 <https://flake8.pycqa.org/en/latest/>`__ is recommended. The Python
 package `black <https://black.readthedocs.io/en/stable/>`__ provides a simple
-solution for code formatting. For example, you can install it and format your
+solution for code formatting. For example, you can format your
 code using the following commands:
 
 .. code:: bash
 
-   pip install black
    black --line-length 79 example_file.py
 
 Example for Code Contribution Cycle (C3) and Pull Requests

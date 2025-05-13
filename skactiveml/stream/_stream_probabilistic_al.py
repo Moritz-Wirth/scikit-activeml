@@ -12,7 +12,6 @@ from ..base import (
 from ..pool import cost_reduction
 from ..utils import (
     check_type,
-    check_random_state,
     check_scalar,
     call_func,
     check_budget_manager,

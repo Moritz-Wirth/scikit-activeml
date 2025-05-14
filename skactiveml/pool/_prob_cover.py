@@ -6,6 +6,9 @@ suited for low budgets.
 import numpy as np
 import warnings
 
+
+from copy import deepcopy
+from inspect import signature
 from sklearn.metrics import pairwise_distances
 from sklearn.cluster import KMeans
 from sklearn.utils.validation import column_or_1d
@@ -173,12 +176,19 @@ class ProbCover(SingleAnnotatorPoolQueryStrategy):
                 "Pass a dictionary with corresponding parameter names and "
                 "values according to the `init` function of `cluster_algo`."
             )
+        check_scalar(update, name="update", target_type=bool)
         cluster_algo_dict = (
             {}
             if self.cluster_algo_dict is None
             else self.cluster_algo_dict.copy()
         )
-        check_scalar(update, name="update", target_type=bool)
+
+        # Optionally, set random state.
+        cluster_algo_sig = signature(self.cluster_algo.__init__).parameters
+        algo_has_seed = "random_state" in cluster_algo_sig
+        dict_lacks_seed = "random_state" not in cluster_algo_dict
+        if self.random_state is not None and algo_has_seed and dict_lacks_seed:
+            cluster_algo_dict["random_state"] = deepcopy(self.random_state)
 
         if update or not hasattr(self, "delta_max_"):
             # Compute distances between each pair of observed samples.
@@ -192,6 +202,7 @@ class ProbCover(SingleAnnotatorPoolQueryStrategy):
                 cluster_obj = self.cluster_algo(**cluster_algo_dict)
                 y_cluster = cluster_obj.fit_predict(X)
                 is_impure = y_cluster[:, None] != y_cluster
+                print(np.mean(is_impure))
                 for delta in deltas:
                     edges = self.distances_ <= delta
                     purity = 1 - (edges * is_impure).any(axis=1).mean()

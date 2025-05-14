@@ -125,7 +125,7 @@ code using the following commands:
 
 .. code:: bash
 
-   black --line-length 79 example_file.py
+   black skactiveml
 
 Example for Code Contribution Cycle (C3) and Pull Requests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

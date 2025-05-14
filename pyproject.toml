@@ -55,7 +55,11 @@ exclude = [
   "skactiveml.*.tests.*",
 ]
 
-
 [project.urls]
 Homepage       = "https://scikit-activeml.github.io"
 Source         = "https://github.com/scikit-activeml/scikit-activeml"
+
+[tool.black]
+line-length = 79
+target-version = ['py311']
+include = '\.pyi?$'

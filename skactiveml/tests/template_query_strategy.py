@@ -927,7 +927,7 @@ class TemplateSingleAnnotatorStreamQueryStrategy(TemplateQueryStrategy):
             for i in range(3):
                 qs_output2, utilities2 = qs2.query(**query_default_params)
 
-            # Test if all query strategie outputs and utilities are the same
+            # Test if all query strategy outputs and utilities are the same
             np.testing.assert_almost_equal(expected_utilities, utilities)
             self.assertFalse(isinstance(list, type(qs_output)))
             if len(expected_output) == 0:
@@ -1008,8 +1008,18 @@ class TemplateSingleAnnotatorStreamQueryStrategy(TemplateQueryStrategy):
     def test_query_reproducibility(self):
         # checks if the results stays the same with same random state
         init_params = deepcopy(self.init_default_params)
-        init_params["random_state"] = np.random.RandomState(0)
 
+        def strip_random_state_inplace(obj):
+            if isinstance(obj, dict):
+                obj.pop("random_state", None)
+                for v in obj.values():
+                    strip_random_state_inplace(v)
+            elif isinstance(obj, (list, tuple)):
+                for item in obj:
+                    strip_random_state_inplace(item)
+
+        strip_random_state_inplace(init_params)
+        init_params["random_state"] = np.random.RandomState(0)
         qs = self.qs_class(**init_params)
 
         for query_params in [

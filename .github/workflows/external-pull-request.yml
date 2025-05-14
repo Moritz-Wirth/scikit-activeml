@@ -86,7 +86,7 @@ jobs:
     - name: Black
       uses: psf/black@stable
       with:
-        options: "--check --line-length 79"
+        options: "--check"
         src: "./skactiveml"
     - name: Lint with flake8
       run: |

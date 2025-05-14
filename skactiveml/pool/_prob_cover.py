@@ -202,7 +202,6 @@ class ProbCover(SingleAnnotatorPoolQueryStrategy):
                 cluster_obj = self.cluster_algo(**cluster_algo_dict)
                 y_cluster = cluster_obj.fit_predict(X)
                 is_impure = y_cluster[:, None] != y_cluster
-                print(np.mean(is_impure))
                 for delta in deltas:
                     edges = self.distances_ <= delta
                     purity = 1 - (edges * is_impure).any(axis=1).mean()

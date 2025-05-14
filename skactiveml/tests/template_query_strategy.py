@@ -498,9 +498,20 @@ class TemplatePoolQueryStrategy(TemplateQueryStrategy):
     def test_query_reproducibility(self):
         # checks if the results stays the same with same random state
         init_params = deepcopy(self.init_default_params)
-        init_params["random_state"] = np.random.RandomState(0)
 
-        qs = self.qs_class(**init_params)
+        def strip_random_state_inplace(obj):
+            if isinstance(obj, dict):
+                obj.pop("random_state", None)
+                for v in obj.values():
+                    strip_random_state_inplace(v)
+            elif isinstance(obj, (list, tuple)):
+                for item in obj:
+                    strip_random_state_inplace(item)
+
+        strip_random_state_inplace(init_params)
+        init_params["random_state"] = np.random.RandomState(0)
+        qs1 = self.qs_class(**init_params)
+        qs2 = self.qs_class(**init_params)
 
         for query_params in [
             self.query_default_params_clf,
@@ -509,10 +520,13 @@ class TemplatePoolQueryStrategy(TemplateQueryStrategy):
             if query_params is not None:
                 query_params = deepcopy(query_params)
                 query_params["return_utilities"] = True
-                id1, u1 = qs.query(**query_params)
-                id2, u2 = qs.query(**query_params)
+                id1, u1 = qs1.query(**query_params)
+                id1_again, u1_again = qs1.query(**query_params)
+                id2, u2 = qs2.query(**query_params)
 
                 self.assertEqual(len(u1[0]), len(query_params["X"]))
+                np.testing.assert_array_equal(id1, id1_again)
+                np.testing.assert_allclose(u1, u1_again)
                 np.testing.assert_array_equal(id1, id2)
                 np.testing.assert_allclose(u1, u2)
 

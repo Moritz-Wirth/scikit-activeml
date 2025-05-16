@@ -13,7 +13,8 @@ query strategies for active learning and to implement tools for working with
 partially unlabeled data. An overview of our repository’s structure is provided
 in the image below. Each node represents a class or interface, and the arrows
 illustrate the inheritance hierarchy among them. Dashed nodes indicate
-functionality that is not yet available in our library.
+functionality that is not yet available in our library. `scikit-learn`
+is used in this image for identification only and does not imply endorsement.
 
 .. image:: https://raw.githubusercontent.com/scikit-activeml/scikit-activeml/master/docs/logos/scikit-activeml-structure.png
    :width: 1000

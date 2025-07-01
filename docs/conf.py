@@ -105,7 +105,15 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "**.ipynb_checkpoints",
+    # ignore sphinx galley example ipynb as they might interfere with including
+    # the generated .rst files
+    'generated/sphinx_gallery_examples/**/*.ipynb'
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "sphinx"
@@ -224,6 +232,7 @@ bibtex_bibfiles = ["refs.bib"]
 intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3/", None),
+    'sklearn': ('http://scikit-learn.org/stable', None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
     "matplotlib": ("https://matplotlib.org/", None),
     "joblib": ("https://joblib.readthedocs.io/en/latest/", None),

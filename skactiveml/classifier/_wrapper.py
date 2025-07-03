@@ -91,7 +91,7 @@ class SklearnClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             The feature matrix representing the samples.
         y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             It contains the class labels of the training samples. Missing
@@ -125,7 +125,7 @@ class SklearnClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             The feature matrix representing the samples.
         y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             It contains the class labels of the training samples. Missing
@@ -159,7 +159,7 @@ class SklearnClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             Input samples.
         predict_kwargs : dict-like
             Further parameters as input to the `predict` method of the
@@ -198,7 +198,7 @@ class SklearnClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             Input samples.
         predict_proba_kwargs : dict-like
             Further parameters as input to the `predict_proba` method of the
@@ -416,7 +416,7 @@ class SlidingWindowClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             The feature matrix representing the samples.
         y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             It contains the class labels of the training samples. Missing
@@ -477,7 +477,7 @@ class SlidingWindowClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             The feature matrix representing the samples.
         y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             It contains the class labels of the training samples. Missing
@@ -670,7 +670,7 @@ class SlidingWindowClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             Input samples.
         predict_kwargs : dict-like
             Further parameters as input to the `predict` method of the
@@ -690,7 +690,7 @@ class SlidingWindowClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             Input samples.
         predict_proba_kwargs : dict-like
             Further parameters as input to the `predict_proba` method of the
@@ -712,7 +712,7 @@ class SlidingWindowClassifier(SkactivemlClassifier, MetaEstimatorMixin):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             Test samples whose class frequencies are to be estimated.
 
         Returns

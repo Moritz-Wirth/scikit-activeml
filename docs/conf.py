@@ -73,6 +73,12 @@ extensions = [
     "copy_sphinx_gallery_notebooks"
 ]
 
+nitpicky = True
+nitpick_ignore = [
+    ("py:class", "sklearn.ensemble._base._BaseHeterogeneousEnsemble"),
+    ("py:class", "skactiveml.pool._bald._GeneralBALD")
+]
+
 # nbsphinx_execute = 'always'
 nbsphinx_execute = 'never'
 
@@ -90,7 +96,7 @@ templates_path = ["_templates"]
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = [".rst"]
+source_suffix = {'.rst': 'restructuredtext'}
 
 # The master toctree document.
 master_doc = "index"
@@ -112,7 +118,9 @@ exclude_patterns = [
     "**.ipynb_checkpoints",
     # ignore sphinx galley example ipynb as they might interfere with including
     # the generated .rst files
-    'generated/sphinx_gallery_examples/**/*.ipynb'
+    'generated/sphinx_gallery_examples/**/*.ipynb',
+    'examples/*',
+    'generated/examples/*'
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
@@ -232,9 +240,9 @@ bibtex_bibfiles = ["refs.bib"]
 intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3/", None),
-    'sklearn': ('http://scikit-learn.org/stable', None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
-    "matplotlib": ("https://matplotlib.org/", None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
     "joblib": ("https://joblib.readthedocs.io/en/latest/", None),
     "iteration-utilities": (
         "https://iteration-utilities.readthedocs.io/en/latest/",

@@ -45,7 +45,7 @@ class AnnotatorEnsembleClassifier(
         Value to represent a missing label.
     cost_matrix : array-like of shape (n_classes, n_classes)
         Cost matrix with `cost_matrix[i,j]` indicating cost of predicting class
-        `classes[j]`  for a sample of class `classes[i]. Can be only set, if
+        `classes[j]`  for a sample of class `classes[i]`. Can be only set, if
         classes is not none.
     random_state : int or RandomState instance or None, default=None
         Determines random number for `predict` method. Pass an int for
@@ -57,7 +57,7 @@ class AnnotatorEnsembleClassifier(
         Holds the label for each class after fitting.
     cost_matrix_ : np.ndarray of shape (classes, classes)
         Cost matrix with `cost_matrix_[i,j]` indicating cost of predicting
-        class `classes_[j]`  for a sample of class `classes_[i].
+        class `classes_[j]`  for a sample of class `classes_[i]`.
     estimators_ : list of estimators
         The elements of the estimators parameter, having been fitted on the
         training data. If an estimator has been set to `'drop'`, it will not
@@ -88,7 +88,7 @@ class AnnotatorEnsembleClassifier(
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, *)
+        X : array-like of shape (n_samples, ...)
             The feature matrix representing the samples.
         y : array-like of shape (n_samples, n_estimators)
             It contains the class labels of the training samples.

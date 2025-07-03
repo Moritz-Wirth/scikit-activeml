@@ -3,7 +3,7 @@ pytest
 pytest-cov
 pytest-xdist
 jupyter
-sphinx~=8.2
+sphinx>=8.1, <=8.2
 sphinxcontrib-bibtex~=2.6
 numpydoc~=1.9
 nbsphinx~=0.9

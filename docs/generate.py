@@ -39,6 +39,7 @@ def generate_api_reference_rst(gen_path):
     gen_path = os.path.join(os.path.basename(gen_path), "api")
     os.makedirs(os.path.abspath(gen_path), exist_ok=True)
     with open(path, "w") as file:
+        # file.write(":html_theme.sidebar_secondary.remove:\n")
         file.write(".. _api_reference:\n")
         file.write("\n")
         file.write("=============\n")
@@ -46,6 +47,9 @@ def generate_api_reference_rst(gen_path):
         file.write("=============\n")
         file.write("\n")
         file.write("This is an overview of the API.\n")
+        file.write("\n")
+        file.write(".. toctree::\n")
+        file.write("  :maxdepth: 4\n")
         file.write("\n")
         file.write(".. module:: skactiveml\n")
         file.write("\n")
@@ -90,6 +94,8 @@ def automodule(module, level=0):
         if isinstance(getattr(module, item), object) and item.isupper():
             constants.append(item)
 
+    title = f"{module.__name__}"
+    title = f"{module.__name__}"
     title = f":mod:`{module.__name__}`"
     rst_str += title + "\n"
     rst_str += "".ljust(len(title), "=") + "\n\n"
@@ -868,6 +874,9 @@ def post_process_tutorials(
 
         if file_content is not None:
             processed_file_content = copy.copy(file_content)
+            processed_file_content = add_orphan_metadata(
+                processed_file_content
+            )
             processed_file_content = replace_colab_link(
                 processed_file_content,
                 file_path_colab,
@@ -885,6 +894,30 @@ def post_process_tutorials(
                 except OSError:
                     print("Error while writing {}")
                     pass
+
+
+def add_orphan_metadata(
+        file_content
+):
+    """This function adds the orphan metadata that nbsphinx require so that the
+    notebooks don't need to appear in any toctree.
+
+    Parameters
+    ----------
+    file_content: str
+        The content of the jupyter notebook.
+
+    Returns
+    -------
+    output : str
+        The notebook with the added metadata.
+    """
+    notebook_json = json.loads(file_content)
+    nbsphinx_dict = notebook_json['metadata'].get('nbsphinx', {})
+    nbsphinx_dict['orphan'] = True
+    notebook_json['metadata']['nbsphinx'] = nbsphinx_dict
+    output = json.dumps(notebook_json)
+    return output
 
 
 def replace_colab_link(

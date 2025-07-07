@@ -38,27 +38,10 @@ def generate_api_reference_rst(gen_path):
     path = os.path.join(os.path.basename(gen_path), "api_reference.rst")
     gen_path = os.path.join(os.path.basename(gen_path), "api")
     os.makedirs(os.path.abspath(gen_path), exist_ok=True)
-    with open(path, "w") as file:
-        # file.write(":html_theme.sidebar_secondary.remove:\n")
-        file.write(".. _api_reference:\n")
-        file.write("\n")
-        file.write("=============\n")
-        file.write("API Reference\n")
-        file.write("=============\n")
-        file.write("\n")
-        file.write("This is an overview of the API.\n")
-        file.write("\n")
-        file.write(".. toctree::\n")
-        file.write("  :maxdepth: 4\n")
-        file.write("\n")
-        file.write(".. module:: skactiveml\n")
-        file.write("\n")
-        for item in skactiveml.__all__:
-            if inspect.ismodule(getattr(skactiveml, item)):
-                file.write(automodule(getattr(skactiveml, item)))
+    automodule(skactiveml, api_root_path=gen_path)
 
 
-def automodule(module, level=0):
+def automodule(module, api_root_path, level=0):
     """
     This function generates the restructured text for the api reference and the
      specified module.
@@ -74,6 +57,7 @@ def automodule(module, level=0):
     -------
         str : The restructured text
     """
+    header_str = ""
     rst_str = ""
     modules = []
     classes = []
@@ -94,24 +78,37 @@ def automodule(module, level=0):
         if isinstance(getattr(module, item), object) and item.isupper():
             constants.append(item)
 
-    title = f"{module.__name__}"
-    title = f"{module.__name__}"
     title = f":mod:`{module.__name__}`"
-    rst_str += title + "\n"
-    rst_str += "".ljust(len(title), "=") + "\n\n"
+    header_str += title + "\n"
+    header_str += "".ljust(len(title), "=") + "\n\n"
 
-    rst_str += f".. automodule:: {module.__name__}\n"
-    rst_str += f"    :no-members:\n"
-    rst_str += f"    :no-inherited-members:\n\n"
+    header_str += f".. automodule:: {module.__name__}\n"
+    header_str += f"    :no-members:\n"
+    header_str += f"    :no-inherited-members:\n\n"
 
-    rst_str += f'.. currentmodule:: {module.__name__.split(".")[0]}\n\n'
+    header_str += f'.. currentmodule:: {module.__name__.split(".")[0]}\n\n'
+
+    if modules:
+        rst_str += f"Submodules\n"
+        rst_str += f"----------\n\n"
+
+        rst_str += f".. list-table::\n"
+        rst_str += f"  :header-rows: 0\n"
+        rst_str += f"  :widths: 100\n"
+        rst_str += "\n"
+            
+        for item in modules:
+            item_module_path = f"{module.__name__}.{item}"
+            rst_str += f"  * - :class:`{item_module_path}`\n"
+        rst_str += "\n"
+
     if classes:
         rst_str += f"Classes\n"
         rst_str += f"-------\n\n"
 
         rst_str += f".. autosummary::\n"
         rst_str += f"   :nosignatures:\n"
-        rst_str += f"   :toctree: api\n"
+        rst_str += f"   :toctree: .\n"
         rst_str += f"   :template: class.rst\n\n"
         for item in classes:
             name = module.__name__
@@ -129,7 +126,7 @@ def automodule(module, level=0):
 
         rst_str += f".. autosummary::\n"
         rst_str += f"   :nosignatures:\n"
-        rst_str += f"   :toctree: api\n"
+        rst_str += f"   :toctree: .\n"
         rst_str += f"   :template: function.rst\n\n"
         for item in functions:
             name = module.__name__
@@ -141,10 +138,45 @@ def automodule(module, level=0):
             rst_str += f"   {name}" + "\n"
         rst_str += "\n"
 
-    for item in modules:
-        rst_str += automodule(getattr(module, item), level=level + 1)
+    path = os.path.join(api_root_path, f"{module.__name__}.rst")
+    if level == 0:
+        with open(path, "w") as file:
+            file.write("=============\n")
+            file.write("API Reference\n")
+            file.write("=============\n")
+            file.write("\n")
+            file.write("This is an overview of the API.\n")
+            file.write("\n")
+            file.write(".. toctree::\n")
+            file.write("  :titlesonly:\n")
+            file.write("  :maxdepth: 4\n")
 
-    return rst_str
+            file.write("\n")
+            for item in modules:
+                file.write(f"  {module.__name__}.{item}\n")
+            file.write("\n")
+            file.write("\n")
+            file.write(".. module:: skactiveml\n")
+    else:
+        with open(path, "w") as file:
+            file.write(header_str)
+            file.write("\n")
+            file.write(".. toctree::\n")
+            file.write("  :hidden:\n")
+            file.write("\n")
+            for item in modules:
+                file.write(f"  {module.__name__}.{item}\n")
+            file.write("\n")
+            file.write(rst_str)
+
+    for item in modules:
+        automodule(
+            getattr(module, item),
+            api_root_path=api_root_path,
+            level=level + 1
+        )
+
+    # return rst_str
 
 
 def generate_strategy_overview_rst(gen_path, json_data):

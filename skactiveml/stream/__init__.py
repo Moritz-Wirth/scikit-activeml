@@ -33,7 +33,6 @@ __all__ = [
     "RandomVariableUncertainty",
     "StreamDensityBasedAL",
     "CognitiveDualQueryStrategy",
-    "CognitiveDualQueryStrategy",
     "CognitiveDualQueryStrategyRan",
     "CognitiveDualQueryStrategyRanVarUn",
     "CognitiveDualQueryStrategyVarUn",

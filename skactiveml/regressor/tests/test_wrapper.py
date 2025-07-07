@@ -75,13 +75,6 @@ class TestWrapper(TemplateSkactivemlRegressor, unittest.TestCase):
         y = np.array([3, 4, 1, 2, 1])
         sample_weight = np.arange(1, len(y) + 1)
 
-        # reg_2 = clone(reg_1)
-        # reg_1.fit(X, y, sample_weight=sample_weight)
-        # self.assertRaises(
-        #     TypeError, reg_1.fit, X, y, sample_weight=sample_weight
-        # )
-        # reg_2.fit(X, y)
-
         reg_1 = SklearnRegressor(estimator=LinearRegression())
         reg_2 = clone(reg_1)
         reg_1.fit(X, y, sample_weight=sample_weight)

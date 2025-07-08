@@ -191,12 +191,11 @@ class AnnotatorEnsembleClassifier(MetaEstimatorMixin, SkactivemlClassifier):
     def _validate_estimators(self):
         if len(self.estimators) == 0:
             raise ValueError(
-                "The list of estimators `self.estimators`, needs to be a"
+                "The list of estimators `self.estimators`, needs to be a "
                 "non-empty list of (name, estimator) tuples."
                 f"Instead, {self.estimators} was passed."
             )
 
-        non_drop_estimators = 0
         for i_elem, elem in enumerate(self.estimators):
             if (
                 not hasattr(elem, "__len__")

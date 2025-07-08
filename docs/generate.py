@@ -96,10 +96,9 @@ def automodule(module, api_root_path, level=0):
         rst_str += f"  :header-rows: 0\n"
         rst_str += f"  :widths: 100\n"
         rst_str += "\n"
-            
         for item in modules:
             item_module_path = f"{module.__name__}.{item}"
-            rst_str += f"  * - :class:`{item_module_path}`\n"
+            rst_str += f"  * - :mod:`{item_module_path}`\n"
         rst_str += "\n"
 
     if classes:
@@ -149,6 +148,7 @@ def automodule(module, api_root_path, level=0):
             file.write("\n")
             file.write(".. toctree::\n")
             file.write("  :titlesonly:\n")
+            file.write("  :includehidden:\n")
             file.write("  :maxdepth: 4\n")
 
             file.write("\n")

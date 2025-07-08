@@ -75,7 +75,6 @@ extensions = [
 
 nitpicky = True
 nitpick_ignore = [
-    ("py:class", "sklearn.ensemble._base._BaseHeterogeneousEnsemble"),
     ("py:class", "skactiveml.pool._bald._GeneralBALD")
 ]
 

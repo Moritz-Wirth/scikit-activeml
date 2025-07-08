@@ -5,7 +5,7 @@ Classifier Ensemble for Multiple Annotators
 from copy import deepcopy
 
 import numpy as np
-from sklearn.ensemble._base import _BaseHeterogeneousEnsemble
+from sklearn.base import MetaEstimatorMixin, is_classifier, is_regressor
 from sklearn.utils.validation import (
     check_array,
     check_is_fitted,
@@ -20,9 +20,7 @@ from ...utils import (
 )
 
 
-class AnnotatorEnsembleClassifier(
-    _BaseHeterogeneousEnsemble, SkactivemlClassifier
-):
+class AnnotatorEnsembleClassifier(MetaEstimatorMixin, SkactivemlClassifier):
     """Ensemble of Annotator-wise Classifier
 
     This strategy consists of fitting one classifier per annotator.
@@ -60,8 +58,7 @@ class AnnotatorEnsembleClassifier(
         class `classes_[j]`  for a sample of class `classes_[i]`.
     estimators_ : list of estimators
         The elements of the estimators parameter, having been fitted on the
-        training data. If an estimator has been set to `'drop'`, it will not
-        appear in `estimators_`.
+        training data.
     """
 
     def __init__(
@@ -73,7 +70,6 @@ class AnnotatorEnsembleClassifier(
         cost_matrix=None,
         random_state=None,
     ):
-        _BaseHeterogeneousEnsemble.__init__(self, estimators=estimators)
         SkactivemlClassifier.__init__(
             self,
             classes=classes,
@@ -81,6 +77,7 @@ class AnnotatorEnsembleClassifier(
             cost_matrix=cost_matrix,
             random_state=random_state,
         )
+        self.estimators = estimators
         self.voting = voting
 
     def fit(self, X, y, sample_weight=None):
@@ -135,7 +132,7 @@ class AnnotatorEnsembleClassifier(
             f"{len(self.estimators)}) but has shape {y.shape}."
         )
         if (
-            self.named_estimators is not None
+            self.estimators is not None
             and y.ndim <= 1
             or y.shape[1] != len(self.estimators)
         ):
@@ -192,7 +189,28 @@ class AnnotatorEnsembleClassifier(
         return P
 
     def _validate_estimators(self):
-        _BaseHeterogeneousEnsemble._validate_estimators(self)
+        if len(self.estimators) == 0:
+            raise ValueError(
+                "The list of estimators `self.estimators`, needs to be a"
+                "non-empty list of (name, estimator) tuples."
+                f"Instead, {self.estimators} was passed."
+            )
+
+        non_drop_estimators = 0
+        for i_elem, elem in enumerate(self.estimators):
+            if (
+                not hasattr(elem, "__len__")
+                or len(elem) != 2
+                or not isinstance(elem[0], str)
+                or not (is_classifier(elem[1]) or is_regressor(elem[1]))
+            ):
+                ValueError(
+                    "The list of estimators `self.estimators`, needs to be a"
+                    "non-empty list of (name, estimator) tuples. Instead, "
+                    f"{self.estimators} was passed with element {elem} at "
+                    f"position {i_elem}."
+                )
+
         for name, est in self.estimators:
             if not isinstance(est, SkactivemlClassifier):
                 raise TypeError(f"'{est}' is not a 'SkactivemlClassifier'.")

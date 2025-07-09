@@ -176,8 +176,6 @@ def automodule(module, api_root_path, level=0):
             level=level + 1
         )
 
-    # return rst_str
-
 
 def generate_strategy_overview_rst(gen_path, json_data):
     """Creates the strategy_overview.rst file in the specified path.

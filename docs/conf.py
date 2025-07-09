@@ -115,8 +115,8 @@ exclude_patterns = [
     "Thumbs.db",
     ".DS_Store",
     "**.ipynb_checkpoints",
-    # ignore sphinx galley example ipynb as they might interfere with including
-    # the generated .rst files
+    # ignore sphinx gallery example ipynb as they might interfere with
+    # including the generated .rst files
     'generated/sphinx_gallery_examples/**/*.ipynb',
     'examples/*',
     'generated/examples/*'

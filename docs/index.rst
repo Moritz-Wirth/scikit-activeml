@@ -22,10 +22,6 @@
    :start-after: examples_start
    :end-before: examples_end
 
-.. .. include:: ../README.rst
-..    :start-after: dev_start
-..    :end-before: dev_end
-
 .. include:: ../README.rst
    :start-after: citing_start
    :end-before: citing_end

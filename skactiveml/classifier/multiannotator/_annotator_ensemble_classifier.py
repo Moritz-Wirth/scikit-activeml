@@ -201,16 +201,14 @@ class AnnotatorEnsembleClassifier(MetaEstimatorMixin, SkactivemlClassifier):
                 not hasattr(elem, "__len__")
                 or len(elem) != 2
                 or not isinstance(elem[0], str)
-                or not (is_classifier(elem[1]) or is_regressor(elem[1]))
             ):
-                ValueError(
+                raise ValueError(
                     "The list of estimators `self.estimators`, needs to be a"
                     "non-empty list of (name, estimator) tuples. Instead, "
                     f"{self.estimators} was passed with element {elem} at "
                     f"position {i_elem}."
                 )
-
-        for name, est in self.estimators:
+            est = elem[1]
             if not isinstance(est, SkactivemlClassifier):
                 raise TypeError(f"'{est}' is not a 'SkactivemlClassifier'.")
             if self.voting == "soft" and not hasattr(est, "predict_proba"):

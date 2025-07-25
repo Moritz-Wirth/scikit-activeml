@@ -81,7 +81,7 @@ class ExpectedModelVarianceReduction(SingleAnnotatorPoolQueryStrategy):
             - If `candidates` is of shape `(n_candidates,)` and of type
               `int`, `candidates` is considered as the indices of the
               samples in `(X,y)`.
-            - If `candidates` is of shape `(n_candidates, *)`, the
+            - If `candidates` is of shape `(n_candidates, ...)`, the
               candidate samples are directly given in `candidates` (not
               necessarily contained in `X`).
         batch_size : int, default=1
@@ -161,7 +161,7 @@ class ExpectedModelVarianceReduction(SingleAnnotatorPoolQueryStrategy):
             new_model_variance,
             reg,
             random_state=self.random_state_,
-            **self.integration_dict
+            **self.integration_dict,
         )
 
         utilities_cand = old_model_variance - ex_model_variance

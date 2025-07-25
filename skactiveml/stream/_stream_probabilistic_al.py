@@ -12,7 +12,6 @@ from ..base import (
 from ..pool import cost_reduction
 from ..utils import (
     check_type,
-    check_random_state,
     check_scalar,
     call_func,
     check_budget_manager,
@@ -241,7 +240,7 @@ class StreamProbabilisticAL(SingleAnnotatorStreamQueryStrategy):
             self.budget_manager_.update,
             candidates=candidates,
             queried_indices=queried_indices,
-            **budget_manager_param_dict
+            **budget_manager_param_dict,
         )
         return self
 
@@ -256,7 +255,7 @@ class StreamProbabilisticAL(SingleAnnotatorStreamQueryStrategy):
         utility_weight,
         return_utilities,
         reset=True,
-        **check_candidates_params
+        **check_candidates_params,
     ):
         """Validate input data and set or check the `n_features_in_` attribute.
 
@@ -312,7 +311,7 @@ class StreamProbabilisticAL(SingleAnnotatorStreamQueryStrategy):
             candidates,
             return_utilities,
             reset=reset,
-            **check_candidates_params
+            **check_candidates_params,
         )
         # check if a budgetmanager is set
 

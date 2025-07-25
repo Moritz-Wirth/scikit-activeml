@@ -53,6 +53,9 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
         Value to represent a missing label.
     random_state : None or int or np.random.RandomState, default=None
         The random state to use.
+    multilabel_aggregation_fn: callable, default=np.average
+        Callable that takes axis as kwarg and reduces along that axis
+
 
     References
     ----------
@@ -71,6 +74,7 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
         clf_embedding_flag_name=None,
         missing_label=MISSING_LABEL,
         random_state=None,
+        multilabel_aggregation_fn=np.average,
     ):
         self.dropout_rate = dropout_rate
         self.n_dropout_samples = n_dropout_samples
@@ -78,6 +82,7 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
         self.cluster_algo_dict = cluster_algo_dict
         self.n_cluster_param_name = n_cluster_param_name
         self.clf_embedding_flag_name = clf_embedding_flag_name
+        self.multilabel_aggregation_fn = multilabel_aggregation_fn
         super().__init__(
             missing_label=missing_label, random_state=random_state
         )
@@ -193,9 +198,11 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
         n_candidates = len(X_cand)
 
         # Prepare an array to hold the dropout predictions.
-        y_pred_dropout = np.empty(
-            (n_candidates, self.n_dropout_samples), dtype=object
-        )
+        shape = (n_candidates, self.n_dropout_samples)
+        if is_multilabel:
+            shape = shape + (y.shape[1],)
+
+        y_pred_dropout = np.empty(shape, dtype=object)
 
         # Loop over the number of dropout inferences.
         for i in range(self.n_dropout_samples):
@@ -218,6 +225,8 @@ class DropQuery(SingleAnnotatorPoolQueryStrategy):
 
         # Filter candidates for clustering based on disagreement.
         n_disagrees = (y_pred[:, None] != y_pred_dropout).sum(axis=-1)
+        if is_multilabel:
+            n_disagrees = self.multilabel_aggregation_fn(n_disagrees, axis=-1)
         disagree_rate = n_disagrees.astype(float) / self.n_dropout_samples
         n_threshold_samples = max(((disagree_rate > 0.5).sum(), batch_size))
         prefiltered_indices = np.argsort(disagree_rate)[-n_threshold_samples:]

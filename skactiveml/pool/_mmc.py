@@ -10,7 +10,6 @@ from sklearn import clone
 from ..base import SingleAnnotatorPoolQueryStrategy, SkactivemlClassifier
 from ..utils import (
     MISSING_LABEL,
-    rand_argmax,
     is_unlabeled,
     simple_batch,
     check_type,
@@ -18,16 +17,30 @@ from ..utils import (
 
 
 class MMC(SingleAnnotatorPoolQueryStrategy):
+    """Maximum Loss Reduction with Maximal Confidence (MMC)
+
+    This class implements the query strategy Maximum Loss Reduction with Maximal Confidence (MMC) [1]
+    that selects samples base on the difference in predicted number of samples by a discriminator model
+    and predictions by the original model.
+
+    Parameters
+    ----------
+    missing_label : scalar or string or np.nan or None, default=np.nan
+        Value to represent a missing label.
+    random_state : int or np.random.RandomState, default=None
+        Random state for candidate selection.
+
+    References
+    ----------
+    [1] B. Yang, J. Sun, T. Wang, and Z. Chen. Effective multi-label active learning for text classification.
+       In Proc. of ACM SIGKDD Inter. Conference on Knowledge; Discovery and Data Mining, 2009.
+    """
     def __init__(
         self,
-        greedy_selection=False,
         missing_label=MISSING_LABEL,
         random_state=None,
     ):
-        super().__init__(
-            missing_label=missing_label, random_state=random_state
-        )
-        self.greedy_selection = greedy_selection
+        super().__init__(missing_label=missing_label, random_state=random_state)
 
     def query(
         self,
@@ -91,46 +104,51 @@ class MMC(SingleAnnotatorPoolQueryStrategy):
             indexing refers to samples in `candidates`.
         """
 
-        is_multilabel = np.array(y).ndim == 2  # here changes
+        is_multilabel = np.array(y).ndim == 2
 
         # Validate parameters.
         X, y, candidates, batch_size, return_utilities = self._validate_data(
             X, y, candidates, batch_size, return_utilities, reset=True, is_multilabel=is_multilabel
         )
 
-        X_cand, mapping = self._transform_candidates(candidates, X, y, is_multilabel=is_multilabel,)
+        X_cand, mapping = self._transform_candidates(candidates, X, y, is_multilabel=is_multilabel)
 
         check_type(discriminator, "discriminator", SkactivemlClassifier)
-        check_type(self.greedy_selection, "greedy_selection", bool)
 
 
         discriminator = clone(discriminator)
         discriminator.classes = list(range(y.shape[1] + 1))
         discriminator.missing_label = -1
 
-        probas = clf.predict_proba(X)
-        probas_sorted = np.flip(np.sort(probas, axis=1))
         # Determine unlabeled vs. labeled samples.
         unlbld_mask = is_unlabeled(y, missing_label=self.missing_label)
         lbld_mask = np.all(~unlbld_mask, axis=1)
         unlbld_mask = np.all(unlbld_mask, axis=1)
 
-        if y[lbld_mask].shape[0] == 0:
-            print("no labels, fallback case?") # TODO
+        probas = clf.predict_proba(X)
+        lbld_probas = probas[lbld_mask]
+        unlbld_probas = probas[unlbld_mask]
+        f = unlbld_probas * 2 - 1
 
-        X_discriminator = probas_sorted[lbld_mask]
+        lbld_probas = np.flip(np.sort(lbld_probas, axis=1), axis=-1)
+        lbld_probas /= np.tile(lbld_probas.sum(axis=1, keepdims=True), (1, lbld_probas.shape[1]))
+
+        unlbld_probas_idx = np.flip(np.argsort(unlbld_probas, axis=1), axis=-1)
+        unlbld_probas = np.flip(np.sort(unlbld_probas, axis=1), axis=-1)
+        unlbld_probas /= np.tile(unlbld_probas.sum(axis=1, keepdims=True), (1, unlbld_probas.shape[1]))
+
+        X_discriminator = lbld_probas
         y_discriminator = y[lbld_mask].sum(axis=1)
         discriminator.fit(X_discriminator, y_discriminator)
 
-        X_discriminator_pred = probas_sorted[unlbld_mask]
-        pred_n_lbl = discriminator.predict(X_discriminator_pred)
+        X_discriminator_pred = unlbld_probas
+        unlbld_pred = discriminator.predict(X_discriminator_pred)
 
-        yhat = np.full(probas_sorted[unlbld_mask].shape, -1)
-        idx_sorted_unlbld = np.flip(np.argsort(probas[unlbld_mask], axis=1))
-        for j, p in enumerate(pred_n_lbl):
-            yhat[j, idx_sorted_unlbld[j, :p]] = 1
+        yhat = -1 * np.ones((len(unlbld_pred), y.shape[1]), dtype=int)
+        for i, p in enumerate(unlbld_pred):
+            yhat[i, unlbld_probas_idx[i, :p]] = 1
 
-        utilities_cand = ((1 - yhat * (probas[unlbld_mask])) / 2).sum(axis=1)
+        utilities_cand = ((1 - yhat * f) / 2).sum(axis=1)
 
         if mapping is None:
             utilities = utilities_cand

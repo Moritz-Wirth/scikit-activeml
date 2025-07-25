@@ -257,6 +257,11 @@ def uncertainty_scores(probas, cost_matrix=None, method="least_confident", is_mu
     method : 'least_confident' or 'margin_sampling' or 'entropy', \
             default='least_confident'
         The method to calculate the uncertainty.
+    is_multilabel: bool, default=False
+        indicates if provided probas should be multilabel
+    ml_agg: callable, default=np.max
+        Aggregation function used to aggregate uncertainty of multilabel predictions
+
 
     References
     ----------
@@ -271,7 +276,7 @@ def uncertainty_scores(probas, cost_matrix=None, method="least_confident", is_mu
 
     if is_multilabel and not np.all(probas <= 1) and not np.all(0 <= probas):
         raise ValueError(
-            "'probas' are invalid. They need to be <=1 and 0<=."
+            "'probas' are invalid. They need to be wihtin [0,1]."
         )
 
 

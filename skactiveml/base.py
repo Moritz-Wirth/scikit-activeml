@@ -263,7 +263,7 @@ class SingleAnnotatorPoolQueryStrategy(PoolQueryStrategy):
         return_utilities,
         reset=True,
         check_X_dict=None,
-        is_multilabel=False, # TODO update documentation
+        is_multilabel=False,
     ):
         """Validate input data, all attributes and set or check the
         `n_features_in_` attribute.
@@ -297,6 +297,8 @@ class SingleAnnotatorPoolQueryStrategy(PoolQueryStrategy):
             provided when reset was last True.
         **check_X_dict : kwargs
             Parameters passed to :func:`sklearn.utils.check_array`.
+        is_multilabel : bool, default=False
+            Weather provided data is in multi-label format or not.
 
         Returns
         -------
@@ -385,6 +387,8 @@ class SingleAnnotatorPoolQueryStrategy(PoolQueryStrategy):
         allow_only_unlabeled : bool, default=False
             If True, an exception is raised when indices of candidates contain
             labeled samples.
+        is_multilabel : bool, default=False
+            Weather provided data is in multi-label format or not.
 
         Returns
         -------

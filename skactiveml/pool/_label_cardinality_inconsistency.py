@@ -14,18 +14,32 @@ from ..utils import (
 )
 
 
-class LabelCardinalityinconsistency(SingleAnnotatorPoolQueryStrategy):
+class LabelCardinalityInconsistency(SingleAnnotatorPoolQueryStrategy):
+    """Label Cardinality Inconsistency (LCI)
+
+    This class implements the query strategy Label Cardinality Inconsistency (LCI) [1]
+    that selects samples base on the difference in label cardinality of the
+    label pool and predicted number of classes in the unlabeled pool.
+
+    Parameters
+    ----------
+    missing_label : scalar or string or np.nan or None, default=np.nan
+        Value to represent a missing label.
+    random_state : int or RandomState instance or None, default=None
+        Controls the randomness of the estimator.
+
+    References
+    ----------
+    [1] Zhang, C., & Chaudhuri, K. (2015). Active learning from weak and strong labelers.
+        Advances in Neural Information Processing Systems, 28.
+    """
 
     def __init__(
-            self,
-            clf_embedding_flag_name=None,
-            missing_label=MISSING_LABEL,
-            random_state=None,
+        self,
+        missing_label=MISSING_LABEL,
+        random_state=None,
     ):
-        self.clf_embedding_flag_name = clf_embedding_flag_name
-        super().__init__(
-            missing_label=missing_label, random_state=random_state
-        )
+        super().__init__(missing_label=missing_label, random_state=random_state)
 
     def query(
         self,
@@ -52,10 +66,6 @@ class LabelCardinalityinconsistency(SingleAnnotatorPoolQueryStrategy):
         check_type(clf, "clf", SkactivemlClassifier)
         check_equal_missing_label(clf.missing_label, self.missing_label_)
         check_scalar(fit_clf, "fit_clf", bool)
-        if self.clf_embedding_flag_name is not None:
-            check_scalar(
-                self.clf_embedding_flag_name, "clf_embedding_flag_name", str
-            )
 
         # Fit the classifier
         if fit_clf:
@@ -81,7 +91,7 @@ class LabelCardinalityinconsistency(SingleAnnotatorPoolQueryStrategy):
 
         n_lbld = X.shape[0] - X_unlbld.shape[0]
 
-        y_label_cardinality = 0 # TODO what if no labeled instances
+        y_label_cardinality = 0
         if n_lbld != 0:
             y_label_cardinality = np.nansum(y) / n_lbld
 

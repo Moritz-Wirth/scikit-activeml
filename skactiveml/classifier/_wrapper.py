@@ -359,6 +359,314 @@ class SklearnClassifier(SkactivemlClassifier, MetaEstimatorMixin):
             return getattr(self.estimator, item)
 
 
+class SklearnMultilabelClassifier(SklearnClassifier):
+    """Sklearn Classifier
+
+    Implementation of a wrapper class for `scikit-learn` classifiers such that
+    missing labels can be handled in a multi-label context. Therefor, samples with missing labels are
+    filtered.
+
+    TODO This class could be integrated into the SklearnClassifier. Currently the match_signature annotation prevents this.
+    TODO Because the signature of e.g. fit is slightly different (y -> Y...)
+
+    Parameters
+    ----------
+    estimator : sklearn.base.ClassifierMixin with MultiOutput capabilities and with predict_proba method
+        The `scikit-learn` classifier to be wrapped.
+    classes : array-like of shape (n_classes,), default=None
+        Holds the label for each class. If `None`, the classes are determined
+        during `fit`.
+    missing_label : scalar or string or np.nan or None, default=np.nan
+        Value to represent a missing label.
+    cost_matrix : array-like of shape (n_classes, n_classes)
+        Cost matrix with `cost_matrix[i,j]` indicating cost of predicting class
+        `classes[j]` for a sample of class `classes[i]`. Can be only set, if
+        `classes` is not `None`.
+    random_state : int or RandomState instance or None, default=None
+        Determines random number for `predict` method. Pass an int for
+        reproducible results across multiple method calls.
+
+    Attributes
+    ----------
+    classes_ : numpy.ndarray of shape (n_classes,)
+        Holds the label for each class after fitting.
+    cost_matrix_ : numpy.ndarray of shape (classes, classes)
+        Cost matrix with `cost_matrix_[i,j]` indicating cost of predicting
+        class `classes_[j]` for a sample of class `classes_[i]`.
+    estimator_ : sklearn.base.ClassifierMixin with predict_proba method
+        The scikit-learn classifier after calling the `fit` method.
+    """
+
+    def __init__(
+        self,
+        estimator,
+        classes=None,
+        missing_label=MISSING_LABEL,
+        cost_matrix=None,
+        random_state=None,
+    ):
+        super().__init__(
+            estimator=estimator,
+            classes=classes,
+            missing_label=missing_label,
+            cost_matrix=cost_matrix,
+            random_state=random_state,
+        )
+
+    @match_signature("estimator", "fit")
+    def fit(self, X, Y, sample_weight=None, **fit_kwargs):
+        """Fit the model using `X` as training data and `y` as class labels.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, *)
+            The feature matrix representing the samples.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            It contains the class labels of the training samples. Missing
+            labels are represented the attribute `self.missing_label_`. In case
+            of multiple labels per sample (i.e., n_outputs > 1), the samples
+            are duplicated.
+        sample_weight : array-like of shape (n_samples,) or\
+                (n_samples, n_outputs)
+            It contains the weights of the training samples' class labels. It
+            must have the same shape as `y`.
+        fit_kwargs : dict-like
+            Further parameters as input to the `fit` method of the `estimator`.
+
+        Returns
+        -------
+        self: SklearnClassifier,
+            The `SklearnClassifier` fitted on the training data.
+        """
+        return self._fit(
+            fit_function="fit",
+            X=X,
+            Y=Y,
+            sample_weight=sample_weight,
+            **fit_kwargs,
+        )
+
+    @match_signature("estimator", "partial_fit")
+    def partial_fit(self, X, Y, sample_weight=None, **fit_kwargs):
+        """Partially fitting the model using `X` as training data and `y` as
+        class labels.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, *)
+            The feature matrix representing the samples.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            It contains the class labels of the training samples. Missing
+            labels are represented the attribute `self.missing_label_`. In case
+            of multiple labels per sample (i.e., n_outputs > 1), the samples
+            are duplicated.
+        sample_weight : array-like of shape (n_samples,) or\
+                (n_samples, n_outputs)
+            It contains the weights of the training samples' class labels. It
+            must have the same shape as `y`.
+        fit_kwargs : dict-like
+            Further parameters as input to the `partial_fit` method of the
+            `estimator`.
+
+        Returns
+        -------
+        self : SklearnClassifier,
+            The `SklearnClassifier` is fitted on the training data.
+        """
+        return self._fit(
+            fit_function="partial_fit",
+            X=X,
+            Y=Y,
+            sample_weight=sample_weight,
+            **fit_kwargs,
+        )
+
+    @match_signature("estimator", "predict")
+    def predict(self, X, **predict_kwargs):
+        """Return class label predictions for the input data `X`.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, *)
+            Input samples.
+        predict_kwargs : dict-like
+            Further parameters as input to the `predict` method of the
+            `estimator`.
+
+        Returns
+        -------
+        y_pred :  numpy.ndarray of shape (n_samples,)
+            Predicted class labels of the input samples.
+        """
+        check_is_fitted(self)
+        predict_dict = {"ensure_min_samples": 1, "ensure_min_features": 1}
+        X = check_array(X, **(self.check_X_dict_ | predict_dict))
+        check_n_features(self, X, reset=False)
+        if self.is_fitted_:
+            if self.cost_matrix is None:
+                y_pred = self.estimator_.predict(X, **predict_kwargs)
+                if y_pred.shape[1] != len(self.classes_):
+                    y_pred_full = np.zeros((len(X), len(self.classes_)))
+                    y_pred_full[:, self._label_counts != 0] = y_pred
+                    y_pred = y_pred_full
+            else:
+                raise NotImplemented("Cost Matrix for Multilabel classification not yet implemented")
+        else:
+            n_samples, n_classes = len(X), len(self.classes_)
+            y_pred = np.zeros((n_samples, n_classes), dtype=int)  # Binary matrix for predictions
+
+            # Predict probabilities for a single instance (simulating a fallback behavior)
+            p = self.predict_proba([X[0]])[0]
+            for i in range(n_samples):
+                # Generate binary predictions (0 or 1) based on probabilities
+                y_pred[i, :] = [
+                    self.random_state_.choice([0, 1], p=[1 - prob, prob])
+                    for prob in p
+                ]
+
+        y_pred = y_pred.astype(self.classes_.dtype)
+        return y_pred
+
+    @match_signature("estimator", "predict_proba")
+    def predict_proba(self, X, **predict_proba_kwargs):
+        """Return probability estimates for the input data `X`.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, *)
+            Input samples.
+        predict_proba_kwargs : dict-like
+            Further parameters as input to the `predict_proba` method of the
+            `estimator`.
+
+        Returns
+        -------
+        P : array-like of shape (n_samples, classes)
+            The class probabilities of the input samples. Classes are ordered
+            according to the attribute `self.classes_`.
+        """
+        check_is_fitted(self)
+        predict_dict = {"ensure_min_samples": 1, "ensure_min_features": 1}
+        X = check_array(X, **(self.check_X_dict_ | predict_dict))
+        check_n_features(self, X, reset=False)
+        if self.is_fitted_:
+            P = self.estimator_.predict_proba(X, **predict_proba_kwargs)
+
+            P_pos = np.column_stack([probs[:, 1] for probs in P])
+            P = np.full((len(X), len(self.classes_)),  0.5)
+            P[:, self._label_counts != 0] = P_pos
+            # map the predicted classes to self.classes
+
+            if not np.any(np.isnan(P)):
+                return P
+
+        warnings.warn(
+            f"Since the 'base_estimator' could not be fitted when"
+            f" calling the `fit` method, the class label "
+            f"distribution`_label_counts={self._label_counts}` is used to "
+            f"make the predictions."
+        )
+        return np.full((len(X), len(self.classes_)), 0.5)
+
+    def _fit(self, fit_function, X, Y, sample_weight=None, **fit_kwargs):
+        # Check input parameters.
+        self.check_X_dict_ = {
+            "ensure_min_samples": 0,
+            "ensure_min_features": 0,
+            "allow_nd": True,
+            "dtype": None,
+        }
+        self.check_y_dict_ = {
+            "ensure_min_samples": 0,
+            "ensure_min_features": 0,
+            "ensure_2d": True,
+            "ensure_all_finite": False,
+            "dtype": None,
+        }
+        X, y, sample_weight = self._validate_data(
+            X=X,
+            y=Y,
+            sample_weight=sample_weight,
+            check_X_dict=self.check_X_dict_,
+            check_y_dict=self.check_y_dict_,
+            y_ensure_1d=False,
+            reset=fit_function == "fit" or not hasattr(self, "n_features_in_"),
+        )
+
+        # Check whether estimator is a valid classifier.
+        if not is_classifier(estimator=self.estimator):
+            raise TypeError(
+                "'{}' must be a scikit-learn "
+                "classifier.".format(self.estimator)
+            )
+
+        # Check whether estimator can deal with cost matrix.
+        if self.cost_matrix is not None and not hasattr(
+                self.estimator, "predict_proba"
+        ):
+            raise ValueError(
+                "'cost_matrix' can be only set, if 'estimator'"
+                "implements 'predict_proba'."
+            )
+        if hasattr(self, "estimator_"):
+            if fit_function != "partial_fit":
+                self.estimator_ = deepcopy(self.estimator)
+        else:
+            self.estimator_ = deepcopy(self.estimator)
+        # count labels per class
+        is_lbld = np.all(is_labeled(y, missing_label=-1), axis=1)
+        self._label_counts = np.sum(y[is_lbld], axis=0)
+
+        try:
+            X_lbld = X[is_lbld]
+            y_lbld = y[is_lbld].astype(np.int64)
+            y_lbld_inv = self._le.inverse_transform(y_lbld)
+            columns_to_keep = np.where(y_lbld_inv.sum(axis=0) > 0)[0]
+            y_lbld_inv = y_lbld_inv[:, columns_to_keep]
+
+            if np.sum(is_lbld) == 0:
+                raise ValueError("There is no labeled data.")
+            elif (
+                    not has_fit_parameter(self.estimator, "sample_weight")
+                    or sample_weight is None
+            ):
+                if fit_function == "partial_fit":
+                    fit_kwargs["classes"] = self.classes_
+                    self.estimator_.partial_fit(
+                        X=X_lbld, Y=y_lbld_inv, **fit_kwargs
+                    )
+                elif fit_function == "fit":
+                    self.estimator_.fit(X=X_lbld, Y=y_lbld_inv, **fit_kwargs)
+            else:
+                if fit_function == "partial_fit":
+                    fit_kwargs["classes"] = self.classes_
+                    fit_kwargs["sample_weight"] = sample_weight[is_lbld]
+                    self.estimator_.partial_fit(
+                        X=X_lbld,
+                        Y=y_lbld_inv,
+                        **fit_kwargs,
+                    )
+                elif fit_function == "fit":
+                    fit_kwargs["sample_weight"] = sample_weight[is_lbld]
+                    self.estimator_.fit(
+                        X=X_lbld,
+                        Y=y_lbld_inv,
+                        **fit_kwargs,
+                    )
+            self.is_fitted_ = True
+        except Exception as e:
+            self.is_fitted_ = False
+            warnings.warn(
+                "The 'base_estimator' could not be fitted because of"
+                " '{}'. Therefore, the class labels of the samples "
+                "are counted and will be used to make predictions. "
+                "The class label distribution is `_label_counts={}`.".format(
+                    e, self._label_counts
+                )
+            )
+        return self
+
+
 class SlidingWindowClassifier(SkactivemlClassifier, MetaEstimatorMixin):
     """Sliding Window Classifier
 

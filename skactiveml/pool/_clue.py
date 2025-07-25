@@ -58,6 +58,8 @@ class Clue(SingleAnnotatorPoolQueryStrategy):
         Value to represent a missing label.
     random_state : None or int or np.random.RandomState, default=None
         The random state to use.
+    multilabel_aggregation_fn: callable, default=np.nansum
+        Callable that takes axis as kwarg and reduces along that axis and handling nans.
 
     References
     ----------
@@ -75,7 +77,7 @@ class Clue(SingleAnnotatorPoolQueryStrategy):
         n_cluster_param_name="n_clusters",
         method="entropy",
         clf_embedding_flag_name=None,
-        ml_agg:callable=np.nanmax,
+        multilabel_aggregation_fn=np.nansum,
     ):
         super().__init__(
             missing_label=missing_label, random_state=random_state
@@ -85,7 +87,7 @@ class Clue(SingleAnnotatorPoolQueryStrategy):
         self.n_cluster_param_name = n_cluster_param_name
         self.method = method
         self.clf_embedding_flag_name = clf_embedding_flag_name
-        self.ml_agg = ml_agg
+        self.multilabel_aggregation_fn = multilabel_aggregation_fn
 
     def query(
         self,
@@ -182,7 +184,7 @@ class Clue(SingleAnnotatorPoolQueryStrategy):
                 probas, X_cand = probas
 
         # Compute uncertainties according to given `method`.
-        uncertainties = uncertainty_scores(probas=probas, method=self.method, is_multilabel=is_multilabel, ml_agg=self.ml_agg)
+        uncertainties = uncertainty_scores(probas=probas, method=self.method, is_multilabel=is_multilabel, ml_agg=self.multilabel_aggregation_fn)
 
         # Implement a fallback, if all uncertainties are zero.
         if np.sum(uncertainties) == 0:

@@ -41,7 +41,7 @@ from ._contrastive_al import ContrastiveAL
 from ._clue import Clue
 from ._drop_query import DropQuery
 from ._mmc import MMC
-from ._label_cardinality_inconsistency import LabelCardinalityinconsistency
+from ._label_cardinality_inconsistency import LabelCardinalityInconsistency
 from ._wrapper import SubSamplingWrapper, ParallelUtilityEstimationWrapper
 from ._falcun import Falcun
 
@@ -74,7 +74,7 @@ __all__ = [
     "BatchBALD",
     "Clue",
     "DropQuery",
-    "LabelCardinalityinconsistency",
+    "LabelCardinalityInconsistency",
     "MMC"
     "batch_bald",
     "CoreSet",
